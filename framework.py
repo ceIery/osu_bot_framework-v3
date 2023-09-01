@@ -17,7 +17,7 @@ from game import Game
 from socket_wrapper import Sock
 from tools.logger import Logger
 from webapp.controller import Controller
-#import requests
+# import requests
 import cloudscraper
 
 
@@ -45,7 +45,8 @@ class Bot:
         self.__player_blacklist = []
         self.__osu_directory = ""
         self.chimu = Chimu(self)
-        self.__logger = Logger("config" + os.sep + "logs" + os.sep + str(datetime.now()).replace(" ", "_", 1).replace(":", "-").split(".", 1)[0] + ".txt", "a", encoding="utf8")
+        self.__logger = Logger("config" + os.sep + "logs" + os.sep + str(datetime.now()).replace(
+            " ", "_", 1).replace(":", "-").split(".", 1)[0] + ".txt", "a", encoding="utf8")
         self.logging = logging
         self.verbose = verbose
 
@@ -76,7 +77,8 @@ class Bot:
 
                     # ping pong
                     if msg[:4] == "PING":
-                        self.__sock.sendall((msg.replace("PING", "PONG") + "\n").encode())
+                        self.__sock.sendall(
+                            (msg.replace("PING", "PONG") + "\n").encode())
                         self.log("-- RECEIVED PING --")
                         self.log("-- SENT PONG --")
                         continue
@@ -102,7 +104,8 @@ class Bot:
                             if channel in self.__channels:
                                 if self.__channels[channel].is_game():
                                     if self.__channels[channel].get_logic()["on_room_close"]:
-                                        x = threading.Thread(target=self.__channels[channel].get_logic()["on_room_close"])
+                                        x = threading.Thread(
+                                            target=self.__channels[channel].get_logic()["on_room_close"])
                                         x.setDaemon(True)
                                         x.start()
                                     del self.__channels[channel]
@@ -114,10 +117,12 @@ class Bot:
                                 channels[channel].del_user(username)
                         elif command == "PRIVMSG":
                             content = msg.split(channel + " :", 1)[1]
-                            message = {"username": username, "channel": channel, "content": content}
+                            message = {"username": username,
+                                       "channel": channel, "content": content}
                             # channel messages
                             if channel in self.__channels:
-                                self.__channels[channel].process_message(message)
+                                self.__channels[channel].process_message(
+                                    message)
                             # personal messages
                             elif channel == self.__username:
                                 if len(self.__personal_message_log) == self.__personal_message_log_length:
@@ -132,20 +137,25 @@ class Bot:
                                     if channels[channel].get_on_personal_message_method():
                                         x = None
                                         if str(inspect.signature(channels[channel].get_on_personal_message_method())).strip("()").split(", ") != [""]:
-                                            x = threading.Thread(target=channels[channel].get_on_personal_message_method(), args=(message,))
+                                            x = threading.Thread(
+                                                target=channels[channel].get_on_personal_message_method(), args=(message,))
                                         else:
-                                            x = threading.Thread(target=channels[channel].get_on_personal_message_method())
+                                            x = threading.Thread(
+                                                target=channels[channel].get_on_personal_message_method())
                                         x.setDaemon(True)
                                         x.start()
                                 if self.__on_personal_message_method:
                                     x = None
                                     if str(inspect.signature(self.__on_personal_message_method)).strip("()").split(", ") != [""]:
-                                        x = threading.Thread(target=self.__on_personal_message_method, args=(message,))
+                                        x = threading.Thread(
+                                            target=self.__on_personal_message_method, args=(message,))
                                     else:
-                                        x = threading.Thread(target=self.__on_personal_message_method)
+                                        x = threading.Thread(
+                                            target=self.__on_personal_message_method)
                                     x.setDaemon(True)
                                     x.start()
-                                    self.log("-- on personal message method executed --")
+                                    self.log(
+                                        "-- on personal message method executed --")
                     # functional information
                     else:
                         # users already in channel
@@ -167,31 +177,40 @@ class Bot:
                         elif command == "332":
                             channel = line[3]
                             if channel in self.__channels and self.__channels[channel].is_game():
-                                self.__channels[channel].set_invite_link("osump://" + line[-1][1:] + "/")
+                                self.__channels[channel].set_invite_link(
+                                    "osump://" + line[-1][1:] + "/")
                         # users already in game channel
                         elif command == "366":
                             channel = line[3]
                             if channel in self.__channels and self.__channels[channel].is_game():
-                                self.__channels[channel].get_existing_attributes()
+                                self.__channels[channel].get_existing_attributes(
+                                )
                         # bad credentials
                         elif command == "464":
                             if not self.verbose:
-                                print("There was an error connecting to " + self.__host + ":" + str(self.__port))
-                                print("Either your username or password is incorrect! Please restart the program.")
-                            self.log("There was an error connecting to " + self.__host + ":" + str(self.__port))
-                            self.log("Either your username or password is incorrect! Please restart the program.")
-                            f = open("config" + os.sep + "bot_config.conf", "r+")
+                                print("There was an error connecting to " +
+                                      self.__host + ":" + str(self.__port))
+                                print(
+                                    "Either your username or password is incorrect! Please restart the program.")
+                            self.log("There was an error connecting to " +
+                                     self.__host + ":" + str(self.__port))
+                            self.log(
+                                "Either your username or password is incorrect! Please restart the program.")
+                            f = open("config" + os.sep +
+                                     "bot_config.conf", "r+")
                             config = json.loads(f.read())
                             f.seek(0)
                             f.truncate(0)
                             config["username"] = "username"
                             config["password"] = "password"
-                            f.write(json.dumps(config).replace(", ", ",\n").replace("{", "{\n", 1)[:-1] + "\n}")
+                            f.write(json.dumps(config).replace(
+                                ", ", ",\n").replace("{", "{\n", 1)[:-1] + "\n}")
                             f.close()
 
     def refresh_logic_profiles(self):
         self.__logic_profiles = {}
-        location = os.path.dirname(os.path.realpath(__file__)) + os.sep + "logic_profiles"
+        location = os.path.dirname(os.path.realpath(
+            __file__)) + os.sep + "logic_profiles"
         os.path.isdir(location)
         for file in os.listdir(location):
             if file[-3:] == ".py":
@@ -222,7 +241,8 @@ class Bot:
             profile = self.get_logic_profile(prof)
             path = ""
             if str(type(profile)) == "<class 'js2py.base.JsObjectWrapper'>":
-                path = os.path.dirname(os.path.realpath(__file__)) + os.sep + "logic_profiles" + os.sep + prof + ".js"
+                path = os.path.dirname(os.path.realpath(
+                    __file__)) + os.sep + "logic_profiles" + os.sep + prof + ".js"
             else:
                 path = inspect.getfile(profile)
             os.remove(path)
@@ -255,7 +275,8 @@ class Bot:
             class_root = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, ".osz")
             with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r'{}\shell\open\command'.format(class_root)) as key:
                 command = winreg.QueryValueEx(key, '')[0]
-                path = shlex.split(command)[0].replace(os.sep + "osu!.exe", "", 1)
+                path = shlex.split(command)[0].replace(
+                    os.sep + "osu!.exe", "", 1)
                 self.set_osu_directory(path)
                 self.log("-- Discovered osu directory: '" + path + "' --")
         except:
@@ -266,9 +287,11 @@ class Bot:
             self.__sock.sendall(("PASS " + self.__password + "\n").encode())
             self.__sock.sendall(("USER " + self.__username + "\n").encode())
             self.__sock.sendall(("NICK " + self.__username + "\n").encode())
-            self.log("-- connected to " + self.__host + ":" + str(self.__port) + " successfully --")
+            self.log("-- connected to " + self.__host + ":" +
+                     str(self.__port) + " successfully --")
             if not self.verbose:
-                print("-- connected to " + self.__host + ":" + str(self.__port) + " successfully --")
+                print("-- connected to " + self.__host + ":" +
+                      str(self.__port) + " successfully --")
             self.__listen()
             if self.__controller.get_host():
                 self.__controller.start()
@@ -276,7 +299,8 @@ class Bot:
             self.__console_listen()
 
         except:
-            self.log("There was an error connecting to " + self.__host + ":" + str(self.__port))
+            self.log("There was an error connecting to " +
+                     self.__host + ":" + str(self.__port))
 
     # joins a channel and also returns a channel or game object
     def join(self, channel):
@@ -313,11 +337,14 @@ class Bot:
 
     # sends a personal message to a username
     def send_personal_message(self, username, message):
-        self.__sock.sendall(("PRIVMSG " + username.replace(" ", "_") + " :" + message + "\n").encode())
+        self.__sock.sendall(
+            ("PRIVMSG " + username.replace(" ", "_") + " :" + message + "\n").encode())
         if len(self.__personal_message_log) == self.__personal_message_log_length:
             self.__personal_message_log = self.__personal_message_log[1:]
-        self.__personal_message_log.append({"username": self.__username, "channel": username, "content": message})
-        self.log("-- sent personal message to " + username + ": '" + message + "' --")
+        self.__personal_message_log.append(
+            {"username": self.__username, "channel": username, "content": message})
+        self.log("-- sent personal message to " +
+                 username + ": '" + message + "' --")
 
     # adds a broadcast and returns its id, cahnnel can be any channel or username
     def add_broadcast(self, channel, message, secs):
@@ -376,13 +403,15 @@ class Bot:
         profile = self.get_logic_profile(prof)
         path = ""
         if str(type(profile)) == "<class 'js2py.base.JsObjectWrapper'>":
-            path = os.path.dirname(os.path.realpath(__file__)) + os.sep + "logic_profiles" + os.sep + prof + ".js"
+            path = os.path.dirname(os.path.realpath(
+                __file__)) + os.sep + "logic_profiles" + os.sep + prof + ".js"
         else:
             path = inspect.getfile(profile)
         f = open(path, "r", encoding="utf-8")
         text = f.read()
         f.close()
-        self.__logic_profile_links[prof] = self.paste2_upload("OBF3 Logic Profile: " + prof, text)
+        self.__logic_profile_links[prof] = self.paste2_upload(
+            "OBF3 Logic Profile: " + prof, text)
         return self.__logic_profile_links[prof]
 
     def logic_profile_download(self, url):
@@ -392,12 +421,14 @@ class Bot:
             profile = description.split()[-1]
             if "OBF3 Logic Profile:" in description:
                 if "class " + profile + ":" in text:
-                    f = open("logic_profiles" + os.sep + profile + ".py", "w", encoding="utf-8")
+                    f = open("logic_profiles" + os.sep +
+                             profile + ".py", "w", encoding="utf-8")
                     f.write("\n".join(text))
                     f.close()
                     self.load_logic_profile(profile)
                 else:
-                    f = open("logic_profiles" + os.sep + profile + ".js", "w", encoding="utf-8")
+                    f = open("logic_profiles" + os.sep +
+                             profile + ".js", "w", encoding="utf-8")
                     f.write("\n".join(text))
                     f.close()
                     self.load_js_logic_profile(profile)
@@ -431,13 +462,16 @@ class Bot:
             if url.split("/")[-1]:
                 r = requests.get(url)
                 # description is the first value
-                linesrtn.append(html.unescape(r.text.split('<div class="desc">', 1)[1].split("</div>", 1)[0].split("<p>", 1)[1][:-5]))
+                linesrtn.append(html.unescape(r.text.split('<div class="desc">', 1)[
+                                1].split("</div>", 1)[0].split("<p>", 1)[1][:-5]))
 
                 # main body
-                text = r.text.split("<ol class='highlight code'>", 1)[1].split("</div></li></ol>", 1)[0]
+                text = r.text.split("<ol class='highlight code'>", 1)[
+                    1].split("</div></li></ol>", 1)[0]
                 lines = text.split("\n")[1:-1]
                 for line in lines:
-                    linesrtn.append(html.unescape(line.split("<div>", 1)[1].split("</div>", 1)[0]))
+                    linesrtn.append(html.unescape(line.split(
+                        "<div>", 1)[1].split("</div>", 1)[0]))
         return linesrtn
 
     def fetch_user_profile(self, username):
@@ -451,7 +485,7 @@ class Bot:
                             break
 
         username = username.replace(" ", "%20")
-        url = "https://osu.ppy.sh/users/" + username
+        url = "https://osu.ppy.sh/users/" + username + "/osu"
         try:
             r = requests.get(url)
             count = 0
@@ -463,7 +497,8 @@ class Bot:
             return json.loads(html.unescape(r.text).split('"user":')[-1].split('}"\n', 1)[0])
         except:
             try:
-                url = "https://osu.ppy.sh/users/" + username.replace("_", "%20")
+                url = "https://osu.ppy.sh/users/" + \
+                    username.replace("_", "%20") + "/osu"
                 r = requests.get(url)
                 return json.loads(html.unescape(r.text).split('"user":')[-1].split('}"\n', 1)[0])
             except:
@@ -534,7 +569,7 @@ class Bot:
     def get_default_message_log_length(self):
         return self.__default_message_log_length
 
-    #clones attributes and logic from channel1 to channel2 (strings)
+    # clones attributes and logic from channel1 to channel2 (strings)
     def clone_channel(self, channel1, channel2):
         attributes = channel1.get_attributes()
         logic = channel1.get_logic_profile()
@@ -591,7 +626,8 @@ class Bot:
 
     def del_player_blacklist(self, username):
         if username.replace(" ", "_") in self.get_formatted_player_blacklist():
-            del self.__player_blacklist[self.get_formatted_player_blacklist().index(username.replace(" ", "_"))]
+            del self.__player_blacklist[self.get_formatted_player_blacklist().index(
+                username.replace(" ", "_"))]
         channels = self.__channels.copy()
         for channel in channels:
             if channels[channel].is_game():
@@ -646,5 +682,6 @@ class Bot:
 
     def is_authenticate(self):
         return self.__authenticate
+
 
 requests = cloudscraper.create_scraper()

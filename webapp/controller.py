@@ -7,6 +7,9 @@ import requests
 from tools import crypto
 from webapp.ws_server import ws_server
 
+import traceback
+import sys
+
 
 class Controller:
     def __init__(self, bot, host="localhost", ws_port=9876, webapp_port=80, on_message_function=None):
@@ -14,11 +17,13 @@ class Controller:
         self.__host = host
         if not on_message_function:
             on_message_function = self.__on_message
-        self.__ws = ws_server(host=host, port=ws_port, on_message_function=on_message_function)
+        self.__ws = ws_server(host=host, port=ws_port,
+                              on_message_function=on_message_function)
         self.__webapp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__webapp_port = webapp_port
         self.__user_num = 20
-        self.__current_user_profile = {"username": "", "avatar_url": "", "country_code": "gb", "statistics": {"level": {"current": 0}, "global_rank": 0, "pp": 0, "hit_accuracy": 0, "play_count": 0}}
+        self.__current_user_profile = {"username": "", "avatar_url": "", "country_code": "gb", "statistics": {
+            "level": {"current": 0}, "global_rank": 0, "pp": 0, "hit_accuracy": 0, "play_count": 0}}
         self.__making_room = False
         self.crypto = crypto.CryptoWrapper(bot.get_password())
 
@@ -64,10 +69,12 @@ class Controller:
                             command = " ".join(message_arr[:2]).strip()
                             args = message_arr[2:]
                             if command == "!mp password":
-                                channel.set_invite_link(channel.get_invite_link().replace(channel.get_password(), ""))
+                                channel.set_invite_link(
+                                    channel.get_invite_link().replace(channel.get_password(), ""))
                                 if args:
                                     channel._password = args[0]
-                                    channel.set_invite_link(channel.get_invite_link() + args[0])
+                                    channel.set_invite_link(
+                                        channel.get_invite_link() + args[0])
                                 else:
                                     channel._password = ""
                             elif command == "!mp size":
@@ -75,16 +82,20 @@ class Controller:
                                     channel._size = int(args[0])
                             elif command == "!abort" and channel.in_progress():
                                 if channel.get_logic()["on_match_abort"]:
-                                    x = threading.Thread(target=channel.get_logic()["on_match_abort"])
+                                    x = threading.Thread(
+                                        target=channel.get_logic()["on_match_abort"])
                                     x.setDaemon(True)
                                     x.start()
-                                    self.bot.log("-- on match abort method executed --")
+                                    self.bot.log(
+                                        "-- on match abort method executed --")
         elif data["command"] == "personal_message":
             if data["message"]:
-                self.bot.send_personal_message(data["channel"], data["message"])
+                self.bot.send_personal_message(
+                    data["channel"], data["message"])
         elif data["command"] == "make_room":
             self.__making_room = True
-            self.bot.make_room(title=data["title"], password=data["password"], game_mode=data["game_mode"], scoring_type=data["scoring_type"], team_type=data["team_type"], logic_profile=data["logic_profile"], invite_list=data["invite_list"], beatmapID=data["beatmapID"], size=data["size"])
+            self.bot.make_room(title=data["title"], password=data["password"], game_mode=data["game_mode"], scoring_type=data["scoring_type"],
+                               team_type=data["team_type"], logic_profile=data["logic_profile"], invite_list=data["invite_list"], beatmapID=data["beatmapID"], size=data["size"])
             self.__making_room = False
         elif data["command"] == "join":
             self.bot.join(data["channel"])
@@ -213,7 +224,8 @@ class Controller:
                 channel.start_on_players_ready(data["autostart"])
                 channel.set_autostart_timer(True, data["autostart_timer"])
                 channel.set_welcome_message(data["welcome_message"])
-                channel.auto_download(data["auto_download"], data["auto_download_path"], data["auto_open"], data["download_video"])
+                channel.auto_download(
+                    data["auto_download"], data["auto_download_path"], data["auto_open"], data["download_video"])
             self.bot.set_osu_directory(data["osu_directory"])
             self.bot.chimu.set_redownload(data["redownload_owned_beatmaps"])
         elif data["command"] == "set_password":
@@ -224,8 +236,10 @@ class Controller:
             channel = self.bot.get_channel(data["channel"])
             if channel and channel.is_game():
                 if self.__current_user_profile["username"] != data["username"]:
-                    self.__current_user_profile = self.bot.fetch_user_profile(data["username"])
-                    self.__current_user_profile["country_code"] = self.__current_user_profile["country_code"].lower()
+                    self.__current_user_profile = self.bot.fetch_user_profile(
+                        data["username"])
+                    self.__current_user_profile["country_code"] = self.__current_user_profile["country_code"].lower(
+                    )
         elif data["command"] == "set_ar_range":
             channel = self.bot.get_channel(data["channel"])
             if channel and channel.is_game():
@@ -295,13 +309,16 @@ class Controller:
             self.__webapp_sock.bind((self.__host, self.__webapp_port))
             self.__webapp_sock.listen()
             # self.__update_loop()
-            self.bot.log("-- Webapp server started at http://" + self.__host + ":" + str(self.__webapp_port) + "/ --")
+            self.bot.log("-- Webapp server started at http://" +
+                         self.__host + ":" + str(self.__webapp_port) + "/ --")
             if not self.bot.verbose:
-                print("-- Webapp server started at http://" + self.__host + ":" + str(self.__webapp_port) + "/ --")
+                print("-- Webapp server started at http://" +
+                      self.__host + ":" + str(self.__webapp_port) + "/ --")
             ws_host = self.__ws.get_host()
             if ws_host == "0.0.0.0":
                 try:
-                    ws_host = requests.get('https://checkip.amazonaws.com').text.strip()
+                    ws_host = requests.get(
+                        'https://checkip.amazonaws.com').text.strip()
                 except:
                     pass
             while True:
@@ -315,13 +332,16 @@ class Controller:
                     f = open("webapp/index.html", "r", encoding="utf8")
                     text += f.read()
                     f.close()
-                    text = text.replace("ws://localhost:9876", "ws://" + ws_host + ":" + str(self.__ws.get_port()), 1)
+                    text = text.replace(
+                        "ws://localhost:9876", "ws://" + ws_host + ":" + str(self.__ws.get_port()), 1)
                     try:
                         conn.sendall(text.encode())
                     except ConnectionAbortedError:
+                        traceback.print_exc(*sys.exc_info())
                         pass
                     conn.close()
                 except OSError:
+                    traceback.print_exception(*sys.exc_info())
                     return
 
     def send_message(self, message, conn=None):
@@ -340,14 +360,16 @@ class Controller:
         channels = self.bot.get_channels().copy()
         for channel in channels:
             data["channels"][channel] = channels[channel].get_attributes()
-            data["channels"][channel]["total_users"] = len(data["channels"][channel]["users"])
+            data["channels"][channel]["total_users"] = len(
+                data["channels"][channel]["users"])
             data["channels"][channel]["users"] = data["channels"][channel]["users"][:self.__user_num]
             if "mp_" in channel:
                 data["channels"][channel]["host"] = channels[channel].get_host()
             else:
                 data["channels"][channel]["host"] = ""
                 data["channels"][channel]["in_progress"] = False
-                data["channels"][channel]["slots"] = {int(data["channels"][channel]["users"].index(user)): {"username": user} for user in data["channels"][channel]["users"]}
+                data["channels"][channel]["slots"] = {int(data["channels"][channel]["users"].index(
+                    user)): {"username": user} for user in data["channels"][channel]["users"]}
             if "commands" in data["channels"][channel]:
                 del data["channels"][channel]["commands"]
         data["pm"] = self.bot.get_personal_message_log()
